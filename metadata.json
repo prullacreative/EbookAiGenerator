@@ -1,0 +1,5 @@
+{
+  "name": "Copy of AI Ebook Generator",
+  "description": "An application to generate a complete ebook about AI and prompting using Gemini. Includes a table of contents, chapters, page numbering, and a PDF export feature.",
+  "requestFramePermissions": []
+}

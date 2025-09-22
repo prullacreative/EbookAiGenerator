@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Ebook Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Hide on-screen footers when the PDF is being generated */
+    .exporting-pdf footer {
+      display: none;
+    }
+    /* PDF page break control for a more professional layout */
+    .page-break-before {
+        break-before: page;
+        page-break-before: always; /* Legacy browser support */
+    }
+    .exporting-pdf h1, .exporting-pdf h2, .exporting-pdf h3, .exporting-pdf h4 {
+      break-after: avoid-page;
+      page-break-after: avoid;
+    }
+    .exporting-pdf p, .exporting-pdf blockquote, .exporting-pdf ul {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://aistudiocdn.com/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://aistudiocdn.com/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://aistudiocdn.com/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.1.6-0?external=rxjs",
+    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.1.6-0?external=rxjs",
+    "@angular/core": "https://next.esm.sh/@angular/core@^20.1.6-0?external=rxjs",
+    "@google/genai": "https://next.esm.sh/@google/genai@^1.20.0?external=rxjs"
+  }
+}
+</script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+  <app-root></app-root>
+</body>
+</html>

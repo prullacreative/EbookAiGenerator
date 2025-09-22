@@ -1,0 +1,140 @@
+<main class="min-h-screen bg-gray-900 text-gray-100 font-sans p-4 sm:p-6 md:p-8">
+  <div class="max-w-6xl mx-auto">
+    
+    <header class="text-center mb-8 border-b border-gray-700 pb-4">
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
+        AI Ebook Generator
+      </h1>
+      <p class="text-gray-400 mt-2">Generate a complete ebook on any topic using Gemini.</p>
+    </header>
+
+    <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 min-h-[60vh] flex flex-col justify-center items-center">
+      
+      @if (isIdle()) {
+        <div class="text-center animate-fade-in w-full max-w-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 mx-auto text-indigo-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-5.747-8.247l11.494 4.994M12 3v.01M12 21v.01M4.253 9.747l4.994 11.494M19.747 9.747l-4.994 11.494M3 12h.01M21 12h.01M4.253 14.253L9.247 2.759M19.747 14.253L14.753 2.759" />
+          </svg>
+          <h2 class="text-2xl font-bold text-white mb-2">What should your ebook be about?</h2>
+          <p class="text-gray-400 mb-6 max-w-md mx-auto">Enter a topic below, and our AI will craft a title, table of contents, and all chapters for you.</p>
+          <form (submit)="$event.preventDefault(); generateEbook()" class="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="text"
+              [value]="ebookTopic()" 
+              (input)="ebookTopic.set($any($event.target).value)"
+              placeholder="e.g., 'The History of Ancient Rome'"
+              class="flex-grow bg-gray-700 border-2 border-gray-600 focus:border-indigo-500 focus:ring-indigo-500 text-white rounded-full py-3 px-6 text-lg transition-colors duration-300 w-full"
+              required
+            >
+            <button 
+              type="submit"
+              [disabled]="!ebookTopic().trim()"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out disabled:bg-gray-500 disabled:cursor-not-allowed disabled:scale-100"
+            >
+              Generate
+            </button>
+          </form>
+        </div>
+      }
+
+      @if (ebookState() === 'error') {
+        <div class="text-center text-red-400 animate-fade-in">
+            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h2 class="text-2xl font-bold mb-2">An Error Occurred</h2>
+            <p class="mb-6">{{ serviceError() || componentError() || generationProgress().message }}</p>
+            <button (click)="ebookState.set('idle'); componentError.set(null);" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full transition-colors">
+                Try Again
+            </button>
+        </div>
+      }
+
+      @if (isGenerating()) {
+        <div class="w-full max-w-lg text-center animate-fade-in">
+            <h2 class="text-2xl font-bold text-white mb-4">Generating Your Ebook...</h2>
+            <p class="text-indigo-300 mb-6 min-h-[2rem]">{{ generationProgress().message }}</p>
+            <div class="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                <div class="bg-indigo-600 h-4 rounded-full transition-all duration-500" [style.width.%]="(generationProgress().current / (generationProgress().total || 1)) * 100"></div>
+            </div>
+            <p class="text-sm text-gray-400 mt-3">{{ generationProgress().current }} / {{ generationProgress().total }} Chapters Generated</p>
+        </div>
+      }
+
+      @if (isCompleted() || isExporting()) {
+        @if(ebook(); as currentEbook) {
+          <div class="w-full animate-fade-in">
+              <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                  <h2 class="text-2xl sm:text-3xl font-bold text-white text-center sm:text-left">{{ currentEbook.title }}</h2>
+                  
+                  <div class="flex items-center shrink-0 gap-3 sm:gap-4">
+                      <!-- FONT SIZE CONTROLS -->
+                      <div class="flex items-center p-1 bg-gray-700 rounded-full text-xs sm:text-sm">
+                          <button (click)="setFontSize('sm')" [class.bg-indigo-600]="fontSize() === 'sm'" [class.text-white]="fontSize() === 'sm'" [class.text-gray-400]="fontSize() !== 'sm'" class="hover:text-white font-semibold w-10 sm:w-12 h-8 rounded-full transition-colors duration-200">
+                            Sm
+                          </button>
+                          <button (click)="setFontSize('base')" [class.bg-indigo-600]="fontSize() === 'base'" [class.text-white]="fontSize() === 'base'" [class.text-gray-400]="fontSize() !== 'base'" class="hover:text-white font-semibold w-10 sm:w-12 h-8 rounded-full transition-colors duration-200">
+                            Md
+                          </button>
+                          <button (click)="setFontSize('lg')" [class.bg-indigo-600]="fontSize() === 'lg'" [class.text-white]="fontSize() === 'lg'" [class.text-gray-400]="fontSize() !== 'lg'" class="hover:text-white font-semibold w-10 sm:w-12 h-8 rounded-full transition-colors duration-200">
+                            Lg
+                          </button>
+                          <button (click)="setFontSize('xl')" [class.bg-indigo-600]="fontSize() === 'xl'" [class.text-white]="fontSize() === 'xl'" [class.text-gray-400]="fontSize() !== 'xl'" class="hover:text-white font-semibold w-10 sm:w-12 h-8 rounded-full transition-colors duration-200">
+                            XL
+                          </button>
+                      </div>
+
+                      <!-- EXPORT BUTTON -->
+                      <button 
+                        (click)="exportToPdf()" 
+                        [disabled]="isExporting()"
+                        class="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out disabled:bg-gray-500 disabled:cursor-wait disabled:scale-100 w-36 sm:w-40">
+                          @if (isExporting()) {
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Exporting...</span>
+                          } @else {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Export to PDF</span>
+                          }
+                      </button>
+                  </div>
+              </div>
+              
+              <div class="bg-gray-900 rounded-lg p-1 sm:p-2 max-h-[70vh] overflow-y-auto">
+                <div #ebookContainer class="space-y-8" [class]="fontSizeClass()">
+                    <!-- Cover Page -->
+                    <div class="bg-gray-800 shadow-lg p-8 sm:p-16 flex flex-col justify-center items-center text-center min-h-[300px]">
+                        <h1 class="text-4xl sm:text-5xl font-bold text-indigo-300">{{ currentEbook.title }}</h1>
+                        <p class="mt-4 text-gray-400 text-lg">An AI-Generated Ebook</p>
+                    </div>
+                    
+                    <!-- Table of Contents -->
+                    <div class="bg-gray-800 shadow-lg p-8 sm:p-16 page-break-before">
+                        <h2 class="text-3xl font-bold border-b border-gray-600 pb-2 mb-6 text-indigo-300">Table of Contents</h2>
+                        <ul class="space-y-3">
+                            @for (chapter of currentEbook.chapters; track chapter.title) {
+                                <li class="text-lg text-gray-200 pl-4 border-l-2 border-gray-700">{{ chapter.title }}</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- Chapters -->
+                    @for (chapter of currentEbook.chapters; track chapter.title; let i = $index) {
+                        <div class="bg-gray-800 shadow-lg p-8 sm:p-16 break-words page-break-before">
+                            <article>
+                                <div [innerHTML]="parseMarkdown(chapter.content)"></div>
+                            </article>
+                            <footer class="text-center text-gray-500 pt-8 mt-8 border-t border-gray-700">
+                                <p>Page {{ i + 3 }}</p>
+                            </footer>
+                        </div>
+                    }
+                </div>
+              </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</main>
